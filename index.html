@@ -1,0 +1,525 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#071A1D" />
+    <meta name="description" content="以沉著、精準的方式記錄每一筆台股交易。" />
+    <title>台股筆記｜台股交易紀錄</title>
+    <style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;800&family=Roboto+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  --ink: #071a1d;
+  --ink-soft: #0b2427;
+  --panel: #0e2b2e;
+  --panel-raised: #123539;
+  --line: rgba(174, 225, 216, 0.14);
+  --line-strong: rgba(174, 225, 216, 0.24);
+  --text: #eef8f5;
+  --muted: #8aa9a6;
+  --dim: #5f7d7a;
+  --mint: #22e6a8;
+  --mint-soft: rgba(34, 230, 168, 0.12);
+  --orange: #ff9e5b;
+  --red: #ff6f73;
+  --blue: #8bbdff;
+  --mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans: 'Noto Sans TC', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--ink);
+  color: var(--text);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+
+.app-shell { min-height: 100vh; display: flex; }
+.sidebar {
+  position: fixed; inset: 0 auto 0 0; z-index: 10;
+  width: 242px; padding: 31px 20px 24px;
+  display: flex; flex-direction: column;
+  border-right: 1px solid var(--line);
+  background: #081e21;
+}
+.brand { display: flex; align-items: center; gap: 11px; margin: 0 10px 46px; }
+.brand-mark {
+  position: relative;
+  display: grid; place-items: center; width: 34px; height: 34px;
+  border: 1px solid var(--mint); border-radius: 50%; color: var(--mint);
+  font-family: var(--mono); font-size: 21px; line-height: 1;
+  box-shadow: 0 0 0 4px rgba(34, 230, 168, 0.08);
+}
+.brand-mark i { position: absolute; right: 6px; top: 3px; color: rgba(238,248,245,.62); font: 13px var(--mono); font-style: normal; transform: rotate(18deg); }
+.brand-word { font-weight: 800; letter-spacing: .08em; font-size: 15px; }
+.brand-sub { display: block; margin-top: 3px; color: var(--dim); font: 9px var(--mono); letter-spacing: .16em; }
+.workspace { padding: 0 12px 25px; border-bottom: 1px solid var(--line); }
+.eyebrow { color: var(--muted); font: 10px var(--mono); letter-spacing: .13em; text-transform: uppercase; }
+.workspace strong { display: block; margin-top: 11px; font-size: 14px; font-weight: 600; }
+.workspace span:last-child { display: block; margin-top: 7px; color: var(--dim); font: 10px var(--mono); }
+.nav { display: grid; gap: 6px; margin-top: 27px; }
+.nav-link {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px;
+  border: 1px solid transparent; border-radius: 7px; color: var(--muted); background: transparent;
+  text-align: left; font-size: 13px; transition: .18s ease;
+}
+.nav-link:hover { color: var(--text); background: rgba(255,255,255,.03); }
+.nav-link.active { color: var(--mint); border-color: rgba(34,230,168,.17); background: var(--mint-soft); }
+.nav-icon { width: 19px; text-align: center; color: currentColor; font: 15px var(--mono); }
+.sidebar-bottom { margin-top: auto; padding: 15px 12px 0; border-top: 1px solid var(--line); }
+.storage-dot { display: inline-block; width: 6px; height: 6px; margin-right: 7px; border-radius: 50%; background: var(--mint); box-shadow: 0 0 8px var(--mint); }
+.sidebar-bottom p { margin: 7px 0 0; color: var(--dim); font: 10px/1.7 var(--mono); }
+
+.main-panel { width: calc(100% - 242px); margin-left: 242px; padding: 0 46px 34px; }
+.topbar { height: 77px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+.breadcrumb { color: var(--muted); font: 10px var(--mono); letter-spacing: .1em; }
+.breadcrumb span { color: var(--dim); }
+.top-actions { display: flex; align-items: center; gap: 22px; }
+.sync-status { color: var(--muted); font: 10px var(--mono); }
+.sync-status b { color: var(--mint); font-weight: 400; }
+.ghost-button, .primary-button, .icon-button { border: 0; transition: .18s ease; }
+.ghost-button { padding: 9px 13px; border: 1px solid var(--line-strong); border-radius: 5px; color: var(--text); background: transparent; font-size: 12px; }
+.ghost-button:hover { border-color: var(--mint); color: var(--mint); }
+.primary-button { width: 100%; padding: 13px 16px; border-radius: 5px; background: var(--mint); color: #05251d; font-weight: 800; font-size: 13px; box-shadow: 0 7px 20px rgba(34,230,168,.12); }
+.primary-button:hover { background: #5ff5c4; transform: translateY(-1px); }
+
+.hero { display: flex; justify-content: space-between; gap: 30px; padding: 53px 0 39px; }
+.hero h1 { max-width: 680px; margin: 13px 0 14px; font-size: clamp(32px, 4.1vw, 56px); letter-spacing: -.055em; line-height: 1.12; font-weight: 800; }
+.hero h1 em { color: var(--mint); font-style: normal; }
+.hero-copy { max-width: 475px; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.9; }
+.hero-callout { align-self: end; min-width: 235px; padding: 16px 18px; border-left: 2px solid var(--mint); background: linear-gradient(90deg, var(--mint-soft), transparent); }
+.hero-callout span { display: block; color: var(--mint); font: 10px var(--mono); letter-spacing: .1em; }
+.hero-callout strong { display: block; margin-top: 8px; color: var(--text); font: 700 14px var(--mono); }
+
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.stat-card { position: relative; min-height: 137px; padding: 20px 19px 16px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); overflow: hidden; }
+.stat-card::after { content: ''; position: absolute; right: -28px; bottom: -55px; width: 115px; height: 115px; border: 1px solid rgba(34,230,168,.13); border-radius: 50%; }
+.stat-card.accent { border-color: rgba(34,230,168,.36); background: linear-gradient(135deg, rgba(34,230,168,.1), var(--panel) 60%); }
+.stat-label { color: var(--muted); font-size: 12px; }
+.stat-value { display: block; margin-top: 14px; font: 600 clamp(19px, 2.1vw, 27px) var(--mono); letter-spacing: -.06em; }
+.stat-value.mint, .positive { color: var(--mint); }
+.stat-value.orange { color: var(--orange); }
+.stat-value.red, .negative { color: var(--red); }
+.stat-note { display: block; margin-top: 10px; color: var(--dim); font: 10px var(--mono); }
+
+.content-grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 20px; align-items: start; }
+.panel { border: 1px solid var(--line); border-radius: 7px; background: var(--panel); }
+.panel-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 20px 21px 17px; border-bottom: 1px solid var(--line); }
+.panel-title { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: .01em; }
+.panel-kicker { margin-top: 6px; color: var(--dim); font: 10px var(--mono); }
+.count-badge { padding: 4px 7px; border: 1px solid var(--line-strong); border-radius: 4px; color: var(--muted); font: 10px var(--mono); }
+
+.positions-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; }
+th { padding: 13px 20px; color: var(--dim); font: 10px var(--mono); font-weight: 400; letter-spacing: .09em; text-align: left; white-space: nowrap; }
+td { padding: 15px 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; white-space: nowrap; }
+td:first-child { color: var(--text); font-weight: 700; }
+td.num { font-family: var(--mono); font-size: 12px; }
+.ticker-cell { display: flex; align-items: center; gap: 9px; }
+.ticker-chip { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 6px; color: var(--mint); background: var(--mint-soft); font: 11px var(--mono); }
+.empty-state { padding: 36px 22px; color: var(--muted); text-align: center; font-size: 13px; }
+.empty-state span { display: block; margin-top: 5px; color: var(--dim); font: 10px var(--mono); }
+
+.form-card { position: sticky; top: 20px; }
+.form-card .panel-header { align-items: center; }
+.form-body { padding: 19px 20px 21px; }
+.form-intro { margin: 0 0 19px; color: var(--muted); font-size: 12px; line-height: 1.75; }
+.field { margin-bottom: 15px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+.field label { display: block; margin-bottom: 7px; color: var(--muted); font-size: 11px; }
+.field input, .field select, .search-field input, .filter-select {
+  width: 100%; min-height: 39px; padding: 9px 10px; border: 1px solid var(--line-strong); border-radius: 4px;
+  outline: none; color: var(--text); background: rgba(0,0,0,.12); font-size: 12px; transition: .18s ease;
+}
+.field input:focus, .field select:focus, .search-field input:focus, .filter-select:focus { border-color: var(--mint); box-shadow: 0 0 0 3px rgba(34,230,168,.08); }
+.field input::placeholder, .search-field input::placeholder { color: var(--dim); }
+.field input[type='date'] { color-scheme: dark; }
+.side-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 4px; border: 1px solid var(--line); border-radius: 5px; background: rgba(0,0,0,.13); }
+.side-option { padding: 8px; border: 0; border-radius: 3px; color: var(--muted); background: transparent; font-size: 12px; }
+.side-option.active.buy { color: var(--mint); background: rgba(34,230,168,.13); }
+.side-option.active.sell { color: var(--red); background: rgba(255,111,115,.13); }
+.form-footnote { margin: 13px 0 0; color: var(--dim); font: 10px/1.7 var(--mono); }
+.form-error { min-height: 18px; margin: 5px 0 7px; color: var(--red); font-size: 11px; }
+
+.activity-card { margin-top: 20px; }
+.activity-header { align-items: center; }
+.table-tools { display: flex; flex-wrap: wrap; gap: 8px; width: min(100%, 640px); justify-content: flex-end; }
+.search-field { position: relative; flex: 1 1 220px; }
+.search-field::before { content: '⌕'; position: absolute; left: 10px; top: 8px; color: var(--dim); font: 18px var(--mono); z-index: 1; }
+.search-field input { min-height: 35px; padding-left: 31px; }
+.filter-select { width: auto; min-width: 98px; min-height: 35px; padding: 6px 25px 6px 9px; color: var(--muted); font-size: 11px; }
+.clear-filters { min-height: 35px; padding: 6px 9px; border: 1px solid var(--line); border-radius: 4px; color: var(--dim); background: transparent; font: 10px var(--mono); transition: .18s ease; }
+.clear-filters:hover { border-color: var(--mint); color: var(--mint); }
+.activity-table td { padding-top: 13px; padding-bottom: 13px; }
+.direction { display: inline-block; min-width: 37px; padding: 4px 6px; border-radius: 3px; text-align: center; font: 10px var(--mono); }
+.direction.buy { color: var(--mint); background: rgba(34,230,168,.1); }
+.direction.sell { color: var(--red); background: rgba(255,111,115,.1); }
+.note-cell { max-width: 190px; overflow: hidden; color: var(--dim); text-overflow: ellipsis; }
+.delete-trade { padding: 5px; border: 0; color: var(--dim); background: transparent; font-size: 14px; }
+.delete-trade:hover { color: var(--red); }
+.table-footer { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid var(--line); color: var(--dim); font: 10px var(--mono); }
+.table-footer button { padding: 0; border: 0; color: var(--mint); background: none; font: inherit; }
+
+.site-footer { display: flex; justify-content: space-between; gap: 20px; padding: 23px 3px 0; color: var(--dim); font: 10px var(--mono); }
+.toast { position: fixed; right: 25px; bottom: 23px; z-index: 20; max-width: 330px; padding: 12px 15px; border: 1px solid rgba(34,230,168,.35); border-radius: 5px; color: var(--text); background: #103c38; box-shadow: 0 12px 35px rgba(0,0,0,.35); font-size: 12px; opacity: 0; transform: translateY(10px); pointer-events: none; transition: .2s ease; }
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.error { border-color: rgba(255,111,115,.45); background: #45272b; }
+
+@media (max-width: 1100px) {
+  .main-panel { padding-inline: 29px; }
+  .content-grid { grid-template-columns: minmax(0, 1fr) 292px; }
+  .stat-grid { grid-template-columns: repeat(2, 1fr); }
+  .hero { padding-top: 42px; }
+}
+@media (max-width: 820px) {
+  .sidebar { position: static; width: 100%; height: auto; padding: 17px 18px 14px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .app-shell { display: block; }
+  .brand { margin: 0 0 16px; }
+  .workspace, .sidebar-bottom { display: none; }
+  .nav { display: flex; gap: 4px; margin: 0; overflow-x: auto; }
+  .nav-link { flex: 0 0 auto; width: auto; padding: 8px 10px; }
+  .nav-icon { display: none; }
+  .main-panel { width: 100%; margin-left: 0; padding: 0 18px 25px; }
+  .topbar { height: 62px; }
+  .hero { padding: 35px 0 27px; }
+  .hero-callout { display: none; }
+  .content-grid { grid-template-columns: 1fr; }
+  .form-card { position: static; grid-row: 1; }
+}
+@media (max-width: 560px) {
+  .top-actions { gap: 9px; }
+  .sync-status { display: none; }
+  .ghost-button { padding: 8px 9px; font-size: 11px; }
+  .hero h1 { font-size: 35px; }
+  .hero-copy { font-size: 13px; }
+  .stat-card { min-height: 122px; padding: 16px 14px; }
+  .stat-value { margin-top: 12px; font-size: 19px; }
+  .panel-header { padding-inline: 15px; }
+  .form-body { padding-inline: 15px; }
+  .field-row { grid-template-columns: 1fr; gap: 0; }
+  .activity-header { display: block; }
+  .table-tools { margin-top: 15px; justify-content: stretch; }
+  .search-field { flex-basis: 100%; }
+  .filter-select { flex: 1; min-width: 0; }
+  .activity-table th, .activity-table td { padding-inline: 12px; }
+  .activity-table th:nth-child(4), .activity-table td:nth-child(4), .activity-table th:nth-child(6), .activity-table td:nth-child(6) { display: none; }
+  .site-footer { display: block; line-height: 1.8; }
+  .site-footer span { display: block; }
+}
+
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+const STORAGE_KEY = 'stocklog_transactions_v2';
+const localNow = new Date();
+const today = `${localNow.getFullYear()}-${String(localNow.getMonth() + 1).padStart(2, '0')}-${String(localNow.getDate()).padStart(2, '0')}`;
+const seedTransactions = [];
+
+const state = {
+  transactions: loadTransactions(),
+  query: '',
+  side: 'all',
+  ticker: 'all',
+  date: 'all',
+  formSide: 'buy'
+};
+
+function loadTransactions() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    const valid = Array.isArray(saved) ? saved.filter((trade) => trade && typeof trade.ticker === 'string' && (trade.side === 'buy' || trade.side === 'sell') && Number.isFinite(Number(trade.qty)) && Number(trade.qty) > 0 && Number.isFinite(Number(trade.price)) && Number(trade.price) > 0 && typeof trade.date === 'string') : [];
+    return valid.length ? valid : seedTransactions;
+  } catch {
+    return seedTransactions;
+  }
+}
+
+function persist() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.transactions));
+}
+
+function formatCurrency(value, compact = false) {
+  const number = Number(value) || 0;
+  return new Intl.NumberFormat('zh-TW', {
+    style: 'currency', currency: 'TWD', minimumFractionDigits: 0, maximumFractionDigits: 2,
+    notation: compact && Math.abs(number) > 100000 ? 'compact' : 'standard'
+  }).format(number);
+}
+
+function formatNumber(value, digits = 0) {
+  return new Intl.NumberFormat('zh-TW', { maximumFractionDigits: digits, minimumFractionDigits: digits }).format(value || 0);
+}
+
+function formatPercent(value) {
+  return `${value >= 0 ? '+' : ''}${Number(value || 0).toFixed(2)}%`;
+}
+
+function formatDate(value) {
+  if (!value) return '—';
+  const [year, month, day] = value.split('-');
+  return `${year}.${month}.${day}`;
+}
+
+function escapeHtml(value = '') {
+  return String(value).replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[char]));
+}
+
+function getAnalytics() {
+  const byTicker = new Map();
+  const realizedByTicker = new Map();
+  const ordered = [...state.transactions].sort((a, b) => a.date.localeCompare(b.date));
+
+  ordered.forEach((trade) => {
+    const ticker = trade.ticker.toUpperCase();
+    const position = byTicker.get(ticker) || { ticker, qty: 0, cost: 0, lastPrice: trade.price, lastDate: trade.date };
+    const realized = realizedByTicker.get(ticker) || 0;
+    if (trade.side === 'buy') {
+      position.qty += trade.qty;
+      position.cost += trade.qty * trade.price + trade.fee;
+    } else {
+      const averageCost = position.qty > 0 ? position.cost / position.qty : 0;
+      position.qty = Math.max(0, position.qty - trade.qty);
+      position.cost = Math.max(0, position.cost - averageCost * trade.qty);
+      realizedByTicker.set(ticker, realized + (trade.price - averageCost) * trade.qty - trade.fee);
+    }
+    position.lastPrice = trade.price;
+    position.lastDate = trade.date;
+    byTicker.set(ticker, position);
+  });
+
+  const positions = [...byTicker.values()].filter((position) => position.qty > 0.000001).map((position) => {
+    const marketValue = position.qty * position.lastPrice;
+    const unrealized = marketValue - position.cost;
+    const realized = realizedByTicker.get(position.ticker) || 0;
+    return { ...position, averageCost: position.cost / position.qty, marketValue, unrealized, realized, pnl: unrealized + realized };
+  }).sort((a, b) => b.marketValue - a.marketValue);
+
+  const invested = positions.reduce((sum, position) => sum + position.cost, 0);
+  const marketValue = positions.reduce((sum, position) => sum + position.marketValue, 0);
+  const realized = [...realizedByTicker.values()].reduce((sum, value) => sum + value, 0);
+  const unrealized = positions.reduce((sum, position) => sum + position.unrealized, 0);
+  const pnl = realized + unrealized;
+  return { positions, invested, marketValue, realized, unrealized, pnl, returnRate: invested ? (pnl / invested) * 100 : 0 };
+}
+
+function getTickers() {
+  return [...new Set(state.transactions.map((trade) => trade.ticker.toUpperCase()))].sort();
+}
+
+function filteredTransactions() {
+  const now = new Date(`${today}T23:59:59`);
+  const days = state.date === '7d' ? 7 : state.date === '30d' ? 30 : null;
+  return [...state.transactions].sort((a, b) => b.date.localeCompare(a.date)).filter((trade) => {
+    const query = state.query.trim().toLowerCase();
+    const matchesQuery = !query || trade.ticker.toLowerCase().includes(query) || (trade.note || '').toLowerCase().includes(query);
+    const matchesSide = state.side === 'all' || trade.side === state.side;
+    const matchesTicker = state.ticker === 'all' || trade.ticker === state.ticker;
+    const difference = now - new Date(`${trade.date}T23:59:59`);
+    const matchesDate = !days || (difference >= 0 && difference <= days * 86400000);
+    return matchesQuery && matchesSide && matchesTicker && matchesDate;
+  });
+}
+
+function renderShell() {
+  document.querySelector('#app').innerHTML = `
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand"><span class="brand-mark">+<i>/</i></span><div><span class="brand-word">台股筆記</span><span class="brand-sub">TW STOCK / JOURNAL</span></div></div>
+        <div class="workspace"><span class="eyebrow">MY WORKSPACE</span><strong>台股投資帳本</strong><span><i class="storage-dot"></i>本機儲存 · 已同步</span></div>
+        <nav class="nav" aria-label="主要導覽">
+          <button class="nav-link active" data-target="overview"><span class="nav-icon">⌂</span>總覽儀表板</button>
+          <button class="nav-link" data-target="trades"><span class="nav-icon">↗</span>交易流水</button>
+          <button class="nav-link" data-target="positions"><span class="nav-icon">▦</span>目前持倉</button>
+        </nav>
+        <div class="sidebar-bottom"><span class="eyebrow"><i class="storage-dot"></i>LOCAL MODE</span><p>資料只保存在這個瀏覽器。<br>適合個人、沉著地記錄。</p></div>
+      </aside>
+      <main class="main-panel" id="overview">
+        <header class="topbar"><div class="breadcrumb"><span>WORKSPACE</span>　/　OVERVIEW</div><div class="top-actions"><span class="sync-status"><b>●</b> LOCAL STORAGE READY</span><button class="ghost-button" id="exportTop">匯出 CSV　↗</button></div></header>
+        <section class="hero"><div><span class="eyebrow">INVESTMENT JOURNAL / 01</span><h1>讓每一筆決策，<em>有跡可循。</em></h1><p class="hero-copy">不用猜今天做了什麼。把成本、持倉與交易脈絡放在同一個安靜的工作區，讓數字替你保留判斷。</p></div><div class="hero-callout"><span>THIS MONTH / ${new Intl.DateTimeFormat('en-US', { month: 'short', year: 'numeric' }).format(localNow).toUpperCase()}</span><strong>記錄，先於判斷。</strong></div></section>
+        <section class="stat-grid" id="stats"></section>
+        <section class="content-grid">
+          <div class="panel" id="positions"><div class="panel-header"><div><h2 class="panel-title">目前持倉</h2><div class="panel-kicker">依股票代號彙整 · 估算總損益</div></div><span class="count-badge" id="positionCount">0 POSITIONS</span></div><div class="positions-wrap"><table><thead><tr><th>股票</th><th>持有股數</th><th>平均成本</th><th>最新價格</th><th>市值</th><th>損益</th></tr></thead><tbody id="positionsBody"></tbody></table></div></div>
+          <aside class="panel form-card"><div class="panel-header"><div><h2 class="panel-title">新增交易</h2><div class="panel-kicker">LOG A NEW DECISION</div></div><span class="count-badge">+ LOG</span></div><div class="form-body"><p class="form-intro">每一筆買賣，都是投資紀律的一部分。留下它。</p><form id="tradeForm" novalidate><div class="field"><label>交易方向</label><div class="side-toggle"><button type="button" class="side-option active buy" data-side="buy">買進 BUY</button><button type="button" class="side-option" data-side="sell">賣出 SELL</button></div></div><div class="field"><label for="ticker">台股代號</label><input id="ticker" name="ticker" required maxlength="6" placeholder="例如 2330" autocomplete="off" inputmode="numeric" /></div><div class="field-row"><div class="field"><label for="qty">股數</label><input id="qty" name="qty" required type="number" min="1" step="1" placeholder="100" /></div><div class="field"><label for="price">成交價格 (TWD)</label><input id="price" name="price" required type="number" min="0.01" step="0.01" placeholder="625" /></div></div><div class="field-row"><div class="field"><label for="tradeDate">交易日期</label><input id="tradeDate" name="date" required type="date" value="${today}" /></div><div class="field"><label for="fee">手續費 (TWD)</label><input id="fee" name="fee" type="number" min="0" step="0.01" value="0" /></div></div><div class="field"><label for="note">備註 <span class="eyebrow">OPTIONAL</span></label><input id="note" name="note" maxlength="80" placeholder="這筆交易的原因…" /></div><div class="form-error" id="formError" aria-live="polite"></div><button type="submit" class="primary-button">記錄這筆交易　↗</button></form><p class="form-footnote">資料會自動保存在目前瀏覽器，不會上傳。</p></div></aside>
+        </section>
+        <section class="panel activity-card" id="trades"><div class="panel-header activity-header"><div><h2 class="panel-title">最近交易</h2><div class="panel-kicker">完整流水 · 依日期由新到舊</div></div><div class="table-tools"><div class="search-field"><input id="searchInput" type="search" placeholder="搜尋代號或備註…" aria-label="搜尋交易紀錄" /></div><select class="filter-select" id="sideFilter" aria-label="依方向篩選"><option value="all">全部方向</option><option value="buy">買進</option><option value="sell">賣出</option></select><select class="filter-select" id="tickerFilter" aria-label="依股票篩選"><option value="all">全部股票</option></select><select class="filter-select" id="dateFilter" aria-label="依日期篩選"><option value="all">全部日期</option><option value="7d">近 7 天</option><option value="30d">近 30 天</option></select><button type="button" class="clear-filters" id="clearFilters">清除</button></div></div><div class="positions-wrap"><table class="activity-table"><thead><tr><th>方向</th><th>股票</th><th>日期</th><th>股數</th><th>成交價格</th><th>手續費</th><th>備註</th><th></th></tr></thead><tbody id="transactionsBody"></tbody></table></div><div class="table-footer"><span id="tradeCount">0 筆紀錄</span><button id="exportBottom">匯出全部交易 CSV　↗</button></div></section>
+        <footer class="site-footer"><span>交易筆記 / PRIVATE BY DEFAULT</span><span>最後更新 <b id="lastUpdated">—</b></span></footer>
+      </main>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+  `;
+}
+
+function renderStats() {
+  const analytics = getAnalytics();
+  const cards = [
+    { label: '目前持倉市值', value: formatCurrency(analytics.marketValue, true), note: `${analytics.positions.length} 檔持倉`, className: 'accent' },
+    { label: '投入成本', value: formatCurrency(analytics.invested, true), note: '剩餘持倉成本' },
+    { label: '總損益', value: `${analytics.pnl >= 0 ? '+' : ''}${formatCurrency(analytics.pnl, true)}`, note: `報酬率 ${formatPercent(analytics.returnRate)}`, className: analytics.pnl >= 0 ? 'mint' : 'red' },
+    { label: '已實現損益', value: `${analytics.realized >= 0 ? '+' : ''}${formatCurrency(analytics.realized, true)}`, note: `未實現 ${analytics.unrealized >= 0 ? '+' : ''}${formatCurrency(analytics.unrealized, true)}`, className: analytics.realized >= 0 ? 'orange' : 'red' }
+  ];
+  document.querySelector('#stats').innerHTML = cards.map((card) => `<article class="stat-card ${card.className || ''}"><span class="stat-label">${card.label}</span><strong class="stat-value ${card.className || ''}">${card.value}</strong><span class="stat-note">${card.note}</span></article>`).join('');
+}
+
+function renderPositions() {
+  const positions = getAnalytics().positions;
+  document.querySelector('#positionCount').textContent = `${positions.length} POSITION${positions.length === 1 ? '' : 'S'}`;
+  document.querySelector('#positionsBody').innerHTML = positions.length ? positions.map((position) => `
+    <tr><td><div class="ticker-cell"><span class="ticker-chip">${escapeHtml(position.ticker.slice(0, 2))}</span><span>${escapeHtml(position.ticker)}</span></div></td><td class="num">${formatNumber(position.qty)}</td><td class="num">${formatCurrency(position.averageCost)}</td><td class="num">${formatCurrency(position.lastPrice)}</td><td class="num">${formatCurrency(position.marketValue)}</td><td class="num ${position.pnl >= 0 ? 'positive' : 'negative'}">${position.pnl >= 0 ? '+' : ''}${formatCurrency(position.pnl)}</td></tr>
+  `).join('') : '<tr><td colspan="6"><div class="empty-state">還沒有持倉<span>新增一筆買進交易，就會出現在這裡。</span></div></td></tr>';
+}
+
+function renderTickerFilter() {
+  const select = document.querySelector('#tickerFilter');
+  const current = state.ticker;
+  select.innerHTML = '<option value="all">全部股票</option>' + getTickers().map((ticker) => `<option value="${escapeHtml(ticker)}">${escapeHtml(ticker)}</option>`).join('');
+  state.ticker = getTickers().includes(current) ? current : 'all';
+  select.value = state.ticker;
+}
+
+function renderTransactions() {
+  const trades = filteredTransactions();
+  document.querySelector('#tradeCount').textContent = `${trades.length} / ${state.transactions.length} 筆紀錄`;
+  document.querySelector('#transactionsBody').innerHTML = trades.length ? trades.map((trade) => `
+    <tr><td><span class="direction ${trade.side}">${trade.side === 'buy' ? '買進' : '賣出'}</span></td><td><strong>${escapeHtml(trade.ticker)}</strong></td><td class="num">${formatDate(trade.date)}</td><td class="num">${formatNumber(trade.qty)}</td><td class="num">${formatCurrency(trade.price)}</td><td class="num">${formatCurrency(trade.fee)}</td><td class="note-cell" title="${escapeHtml(trade.note || '')}">${escapeHtml(trade.note || '—')}</td><td><button class="delete-trade" data-id="${escapeHtml(trade.id)}" aria-label="刪除 ${escapeHtml(trade.ticker)} 交易">×</button></td></tr>
+  `).join('') : '<tr><td colspan="8"><div class="empty-state">找不到符合條件的交易<span>試試清除篩選，或先記錄一筆交易。</span></div></td></tr>';
+}
+
+function renderAll() {
+  renderStats();
+  renderPositions();
+  renderTickerFilter();
+  renderTransactions();
+  const latest = [...state.transactions].sort((a, b) => b.date.localeCompare(a.date))[0];
+  document.querySelector('#lastUpdated').textContent = latest ? formatDate(latest.date) : '—';
+}
+
+function showToast(message, type = 'success') {
+  const toast = document.querySelector('#toast');
+  toast.textContent = message;
+  toast.className = `toast show ${type === 'error' ? 'error' : ''}`;
+  window.clearTimeout(showToast.timer);
+  showToast.timer = window.setTimeout(() => { toast.className = 'toast'; }, 2700);
+}
+
+function exportCSV() {
+  if (!state.transactions.length) {
+    showToast('目前沒有可匯出的交易紀錄。', 'error');
+    return;
+  }
+  const headers = ['日期', '股票代號', '方向', '股數', '成交價格', '手續費', '備註'];
+  const rows = [...state.transactions].sort((a, b) => a.date.localeCompare(b.date)).map((trade) => [trade.date, trade.ticker, trade.side === 'buy' ? '買進' : '賣出', trade.qty, trade.price, trade.fee, trade.note || '']);
+  const csv = '\ufeff' + [headers, ...rows].map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(',')).join('\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `stocklog-${today}.csv`;
+  anchor.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV 已匯出，保留你的交易脈絡。');
+}
+
+function getHoldingQtyAtDate(ticker, date) {
+  return [...state.transactions].filter((trade) => trade.ticker === ticker && trade.date <= date).sort((a, b) => a.date.localeCompare(b.date)).reduce((quantity, trade) => quantity + (trade.side === 'buy' ? trade.qty : -trade.qty), 0);
+}
+
+renderShell();
+renderAll();
+
+document.addEventListener('click', (event) => {
+  const nav = event.target.closest('.nav-link');
+  if (nav) {
+    document.querySelectorAll('.nav-link').forEach((item) => item.classList.toggle('active', item === nav));
+    document.querySelector(`#${nav.dataset.target}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  const sideButton = event.target.closest('.side-option');
+  if (sideButton) {
+    state.formSide = sideButton.dataset.side;
+    document.querySelectorAll('.side-option').forEach((item) => item.className = `side-option ${item.dataset.side === state.formSide ? `active ${state.formSide}` : ''}`);
+    return;
+  }
+  const deleteButton = event.target.closest('.delete-trade');
+  if (deleteButton) {
+    const trade = state.transactions.find((item) => item.id === deleteButton.dataset.id);
+    if (trade && window.confirm(`確定刪除 ${trade.ticker} 的這筆${trade.side === 'buy' ? '買進' : '賣出'}紀錄嗎？`)) {
+      state.transactions = state.transactions.filter((item) => item.id !== trade.id);
+      persist();
+      renderAll();
+      showToast('交易已刪除，摘要已同步更新。');
+    }
+  }
+  if (event.target.closest('#exportTop, #exportBottom')) exportCSV();
+  if (event.target.closest('#clearFilters')) {
+    state.query = ''; state.side = 'all'; state.ticker = 'all'; state.date = 'all';
+    document.querySelector('#searchInput').value = '';
+    document.querySelector('#sideFilter').value = 'all';
+    document.querySelector('#dateFilter').value = 'all';
+    renderTickerFilter(); renderTransactions();
+  }
+});
+
+document.addEventListener('input', (event) => {
+  if (event.target.id === 'searchInput') {
+    state.query = event.target.value;
+    renderTransactions();
+  }
+  if (event.target.id === 'ticker') event.target.value = event.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+});
+
+document.addEventListener('change', (event) => {
+  if (event.target.id === 'sideFilter') state.side = event.target.value;
+  if (event.target.id === 'tickerFilter') state.ticker = event.target.value;
+  if (event.target.id === 'dateFilter') state.date = event.target.value;
+  if (['sideFilter', 'tickerFilter', 'dateFilter'].includes(event.target.id)) renderTransactions();
+});
+
+document.querySelector('#tradeForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const form = new FormData(event.currentTarget);
+  const ticker = String(form.get('ticker') || '').trim().toUpperCase();
+  const qty = Number(form.get('qty'));
+  const price = Number(form.get('price'));
+  const fee = Number(form.get('fee') || 0);
+  const date = String(form.get('date') || '');
+  const note = String(form.get('note') || '').trim();
+  const error = document.querySelector('#formError');
+  error.textContent = '';
+
+  if (!/^\d{4,6}$/.test(ticker) || !Number.isInteger(qty) || qty <= 0 || !Number.isFinite(price) || price <= 0 || !Number.isFinite(fee) || fee < 0 || !date) {
+    error.textContent = '請輸入 4–6 位數字台股代號，並確認股數、價格與日期。';
+    return;
+  }
+  if (date > today) {
+    error.textContent = '交易日期不能晚於今天。';
+    return;
+  }
+  if (state.formSide === 'sell' && qty > getHoldingQtyAtDate(ticker, date)) {
+    error.textContent = `賣出股數超過該日期持倉（可賣 ${formatNumber(getHoldingQtyAtDate(ticker, date))} 股）。`;
+    return;
+  }
+  const actionLabel = state.formSide === 'buy' ? '買進' : '賣出';
+  state.transactions.push({ id: crypto.randomUUID?.() || `${Date.now()}-${Math.random()}`, ticker, side: state.formSide, qty, price, fee, date, note });
+  persist();
+  event.currentTarget.reset();
+  document.querySelector('#tradeDate').value = today;
+  document.querySelector('#fee').value = '0';
+  document.querySelector('#formError').textContent = '';
+  state.formSide = 'buy';
+  document.querySelectorAll('.side-option').forEach((item) => item.className = `side-option ${item.dataset.side === 'buy' ? 'active buy' : ''}`);
+  renderAll();
+  showToast(`${ticker} ${actionLabel}交易已記錄。`);
+});
+
+    </script>
+  </body>
+</html>
